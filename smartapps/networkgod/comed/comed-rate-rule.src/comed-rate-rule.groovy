@@ -29,33 +29,12 @@ preferences {
     page(name: "startPage", title: "ComEd Rule Definition", nextPage: "conditionsPage", install: false, uninstall: true) {
       section("Global Options:") {
         input name: "activate", type: "bool", title: "Enabled?", description: "Enables or disables this rule.", required: true, defaultValue: "true"
-        input(name: "ruleType", type: "enum", title: "Pricing Rule Type?", options: ["Greater Than","Less Than","Between"], required: true, description: "With respect to the price crossing the threshold, when should this rule activate?")
-        input "cents_per_kwh", "decimal", required: true, title: "Cents Per KWH Threshold?", defaultValue: 4.5, range: "0..30"
+        input(name: "ruleType", type: "enum", title: "Pricing Rule Type?", options: ["Greater Than": "Greater Than", "Less Than": "Less Than", "Between": "Between"], required: true, description: "With respect to the price crossing the threshold, when should this rule activate?")
+        input "cents_per_kwh", "decimal", required: true, title: "Cents Per KWH Threshold?", defaultValue: 4.5, range: "-10..30"
       }
-//      section("Optional Conditions:") {
-//        input "time_delay", "number", required: true, title: "How many minutes do you want to wait before this condition is elgible to trigger again (0 = disabled)?", defaultValue: 0
-//        input "cents_per_kwh_reset", "decimal", required: true, title: "Do not execute again until price falls below this cents/kwh threshold is met (0.0 = disabled)?", defaultValue: 0.0, range: "0..30"
-//      }
-//      section("Actions:") {
-//        input "switch_on", "capability.switch", title: "Turn on switches?", required: false, multiple:true, hideWhenEmpty: true
-//        input "switch_off", "capability.switch", title: "Turn off switches?", required: false, multiple:true, hideWhenEmpty: true
-//        input "thermostats", "capability.thermostat", title: "Modify Thermostats?", required: false, multiple:true, hideWhenEmpty: false
-//        input "thermostat_heatingSetpoint", "number", title: "Set heating to? (Degrees)", required: false, defaultValue: 73, hideWhenEmpty: false, range: "50..90"
-//        input "thermostat_coolingSetpoint", "number", title: "Set cooling to? (Degrees)", required: false, defaultValue: 73, hideWhenEmpty: false, range: "50..90"
-//      }
     }
     page(name: "conditionsPage", title: "ComEd Rule Conditions", install: true, uninstall: true)
-//    page(name: "actionsPage")
-//    page(name: "actionsPage", title: "ComEd Rule Actions", install: true, uninstall: true)
-//    page(name: "notification_preferences", title: "Notification Options", nextPage: "namePage", install: false, uninstall: true) {
-//      section {
-//        input("recipients", "contact", title: "Send notifications to") {
-//            input(name: "sms", type: "phone", title: "Send A Text To", description: null, required: false)
-//            input(name: "pushNotification", type: "bool", title: "Send a push notification", description: null, defaultValue: false)
-//        }
-//      }
-//    }
-//    page(name: "namePage", title: "Custom Rule Name", install: true, uninstall: true)
+
     
 }
 
@@ -98,28 +77,6 @@ def initialize() {
 //     processPriceChange(5.1, "2018-01-01", 2.0)
 //}
 
-//def conditionsPage() {
-//     dynamicPage(name: "conditionsPage", nextPage: "actionsPage") { //, title: "Rule Conditions", install: true, uninstall: true) {
-//          section("Global Rule Options") {
-//               input name: "activate", type: "bool", title: "Enabled?", description: "Enables or disables this rule.", required: true, defaultValue: "true"
-//          }
-//          section("Rule Type") {
-//               input name: "ruleType", type: "enum", title: "Pricing Rule Type?", options: ["Greater Than", "Less Than", "Between"], required: true, description: "With respect to the price crossing the threshold, when should this rule activate?", submitOnChange: true
-//          }
-//          section("Rule Options") {
-//               def cents_per_kwh_title = "Cents Per KWH Threshold?"
-//               if (ruleType.toLowerCase() == "between") {
-//                    cents_per_kwh_title = "High Cents/KWH Threshold?"
-//                    input "low_cents_per_kwh", "decimal", required: true, title: "Low Cents/KWH Threshold?", defaultValue: 4.5, range: "0..30"
-//               }
-//               input "cents_per_kwh", "decimal", required: true, title: cents_per_kwh_title, defaultValue: 4.5, range: "0..30", submitOnChange: true
-//               input "time_delay", "number", required: true, title: "How many minutes do you want to wait before this condition is elgible to trigger again (0 = disabled)?", defaultValue: 0
-//               input "cents_per_kwh_reset", "decimal", required: true, title: "Do not execute again until price falls below this cents/kwh threshold is met (0.0 = disabled)?", defaultValue: 0.0, range: "0..30"
-//          }
-//     
-//     }
-//}
-
 // page for allowing the user to give the automation a custom name
 def conditionsPage() {
     if (!overrideLabel) {
@@ -133,21 +90,23 @@ def conditionsPage() {
                //def cents_per_kwh_title = "Cents Per KWH Threshold?"
                if (ruleType.toLowerCase() == "between") {
                     //cents_per_kwh_title = "High Cents/KWH Threshold?"
-                    input "high_cents_per_kwh", "decimal", required: true, title: "Do no trigger above this Cents/KWH threshold?", defaultValue: 6.0, range: "0..30"
+                    input "high_cents_per_kwh", "decimal", required: true, title: "Do no trigger above this Cents/KWH threshold?", defaultValue: 6.0, range: "-10..30"
                } else {
                     input "cents_per_kwh_reset", "decimal", required: true, title: "Do not execute again until price falls below this cents/kwh threshold is met (0.0 = disabled)?", defaultValue: 0.0, range: "0..30"
                }
                //input "cents_per_kwh", "decimal", required: true, title: cents_per_kwh_title, defaultValue: 4.5, range: "0..30", submitOnChange: true
-               input "time_delay", "number", required: true, title: "How many minutes do you want to wait before this condition is elgible to trigger again (0 = disabled)?", defaultValue: 0
-               input "fromTime", "time", title: "Only if time is after...", required: false
-               input "toTime", "time", title: "and before...", required: false
+               input "time_delay", "number", required: true, title: "Select how many minutes to wait before this condition is elgible to trigger again (0 = disabled)?", defaultValue: 0
+               input "elgibleModes", "mode", title: "Select elgible modes", multiple: true, required: false
+               input "afterTime", "time", title: "Only if time is after...", required: false
+               input "beforeTime", "time", title: "and before...", required: false
+               input "daysOfWeek", "enum", title: "Select Days of the Week", required: true, multiple: true, options: ["Sunday": "Sunday", "Monday": "Monday", "Tuesday": "Tuesday", "Wednesday": "Wednesday", "Thursday": "Thursday", "Friday": "Friday", "Saturday": "Saturday"]
         }
   
         section("Which Actions To Excute?") {
-             input "switch_on", "capability.switch", title: "Turn on switches?", required: false, multiple:true, hideWhenEmpty: true
-             input "switch_off", "capability.switch", title: "Turn off switches?", required: false, multiple:true, hideWhenEmpty: true
-             input "dimmers","capability.switchLevel", title: "Dim devices?", required: false, multiple:true, hideWhenEmpty: true
-             input "thermostats", "capability.thermostat", title: "Modify Thermostats?", required: false, multiple:true, hideWhenEmpty: false,submitOnChange: true
+             input "switch_on", "capability.switch", title: "Select the switches to turn on", required: false, multiple:true, hideWhenEmpty: true
+             input "switch_off", "capability.switch", title: "Select the switches to turn off", required: false, multiple:true, hideWhenEmpty: true
+             input "dimmers","capability.switchLevel", title: "Select the devices to dim", required: false, multiple:true, hideWhenEmpty: true
+             input "thermostats", "capability.thermostat", title: "Select the thermostats to change", required: false, multiple:true, hideWhenEmpty: false,submitOnChange: true
         }
         if (dimmers != null) {
              section("Dimmer Options") {
@@ -192,10 +151,61 @@ def conditionsPage() {
 // It uses the lights selected and action to create the automation label
 def defaultLabel() {
      if (ruleType.toLowerCase() == "between") {
-          return "Trigger when price is hits range starting at ${cents_per_kwh}"
+          return "Trigger when price hits range starting at ${cents_per_kwh}"
      } else { return "Trigger when price is ${ruleType.toLowerCase()} ${cents_per_kwh}" }
 }
 
+// This method checks to make sure that the current mode is allowed in the rule list
+def checkModes() {
+     if (elgibleModes != null) {
+          // Modes has been defined check to see if we are in one of them
+          def modeResult = elgibleModes.any{it == location.mode}
+          log.debug("Mode ${location.mode} within parameters: ${modeResult}")
+          return modeResult
+     } else {
+          // Modes is null therefore we'll return true because any mode should match
+          log.debug("No mode conditions found, returning true to skip this check.")
+          return true
+     }
+}
+
+// Perform a time check and return the boolean values.  This allows us to modularize the conditionals making it easier to read and maintain code.
+def checkTime() {
+     // To allow maximum flexibility, any values not specified (i.e. afterTime and beforeTime) will be substiuted with midnight to enable simple time
+     // calculations.  If both are specified then make sure the time is between those values.
+     if (afterTime != null & beforeTime == null) {
+          def timeResult = timeOfDayIsBetween(afterTime, "00:00", new Date(), location.timeZone)
+          log.debug("Checking to make sure time is after ${afterTime} returning ${timeResult}")
+          return timeResult
+     } else if (afterTime == null & beforeTime != null) {
+          def timeResult = timeOfDayIsBetween("00:00", beforeTime, new Date(), location.timeZone)
+          log.debug("Checking to make sure time is before ${beforeTime} returning ${timeResult}")
+          return timeResult
+     } else if (afterTime != null & beforeTime != null) {
+          def timeResult = timeOfDayIsBetween(afterTime, beforeTime, new Date(), location.timeZone)
+          log.debug("Checking to make sure time is between ${afterTime} and ${beforeTime} returning ${timeResult}")
+          return timeResult
+     } else {
+          log.debug("No time conditions found, returning true to skip this check.")
+          // If there is an error or neither time periods are specified this check should always return true.
+          return true
+     }
+}
+
+// This method checks the day of the week and returns a boolean value.
+def checkDayOfWeek() {
+     if (daysOfWeek != null) {
+          def df = new java.text.SimpleDateFormat("EEEE")
+          df.setTimeZone(location.timeZone)
+          def day = df.format(new Date())
+          def dayResult = daysOfWeek.contains(day)
+          log.debug("Today is ${day} returning ${dayResult}")
+          return dayResult
+     } else {
+          log.debug("No day of the week conditions found, returning true to skip this check.")
+          return true
+     }
+}
 
 // TODO: implement event handlers
 
@@ -244,7 +254,7 @@ def condition_changer() {
 // This is a simple helper to make some of the if statements more readible and predictable.
 def condition_helper(enabled, thresholdStatus) {
      log.debug("Rule enabled: ${enabled}, status: ${thresholdStatus}")
-     if (enabled && thresholdStatus == "RESET") { return true }
+     if (enabled && checkModes() && checkTime() && checkDayOfWeek() && thresholdStatus == "RESET") { return true }
      else { return false }
 }
 
