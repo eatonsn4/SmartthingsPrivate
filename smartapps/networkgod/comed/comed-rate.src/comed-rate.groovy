@@ -52,19 +52,17 @@ def updated() {
 }
 
 def initialize() {
-	// TODO: subscribe to attributes, devices, locations, etc.
-
     // Initial values
     state.previousPrice = 0.0
     
     // Populate information right away
-    getForcast()
+    getForecast()
     getData()
     
-    
     // Set schedulers
+    runEvery15Minutes(getForecast)
     runEvery5Minutes(getData)
-    runEvery15Minutes(getForcast)
+    
 }
 
 // TODO: implement event handlers
@@ -111,10 +109,11 @@ private get(feature) {
     getWeatherFeature(feature, zipCode)
 }
 
-private getForcast() {
+private getForecast() {
      def f = get("forecast")
      state.forecast = f?.forecast?.simpleforecast?.forecastday[0]
      log.debug("${state.forecast}")
+     //if (getTodayForecastLow() > 0) { log.debug("WORKS") }
      //if (state.forecast) {
      //     f1?.each {
      //          log.debug("${it.low.fahrenheit}")
@@ -123,13 +122,14 @@ private getForcast() {
 }
 
 public getTodayForecastLow() {
-     return state.forecast?.low?.fahrenheit
+     //return state.forecast?.low?.fahrenheit
+     return state.forecast?.low?.fahrenheit.toInteger()
 }
 
 public getTodayForecastHigh() {
-     return state.forecast?.high?.fahrenheit
+     return state.forecast?.high?.fahrenheit.toInteger()
 }
 
 public getTodayForecastHumidity() {
-     return state.forecast.avehumidity
+     return state.forecast.avehumidity.toInteger()
 }
