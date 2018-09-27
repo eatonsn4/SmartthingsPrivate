@@ -27,11 +27,26 @@ definition(
 
 preferences {
     page(name: "startPage", title: "ComEd Rule Definition", nextPage: "conditionsPage", install: false, uninstall: true) {
-      section("Global Options:") {
-        input name: "activate", type: "bool", title: "Enabled?", description: "Enables or disables this rule.", required: true, defaultValue: "true"
-        input(name: "ruleType", type: "enum", title: "Pricing Rule Type?", options: ["Greater Than": "Greater Than", "Less Than": "Less Than", "Between": "Between"], required: true, description: "With respect to the price crossing the threshold, when should this rule activate?")
-        input "cents_per_kwh", "decimal", required: true, title: "Cents Per KWH Threshold?", defaultValue: 4.5, range: "-10..30"
-      }
+          section("Global Options:") {
+               input name: "activate", type: "bool", title: "Enabled?", description: "Enables or disables this rule.", required: true, defaultValue: "true"
+               input(name: "ruleType", type: "enum", title: "Pricing Rule Type?", options: ["Greater Than": "Greater Than", "Less Than": "Less Than", "Between": "Between"], required: true, description: "With respect to the price crossing the threshold, when should this rule activate?")
+               input "cents_per_kwh", "decimal", required: true, title: "Cents Per KWH Threshold?", defaultValue: 4.5, range: "-10..30"
+          }
+          section("Time Conditions") {
+               //input "cents_per_kwh", "decimal", required: true, title: cents_per_kwh_title, defaultValue: 4.5, range: "0..30", submitOnChange: true
+               input "time_delay", "number", required: false, title: "Number of minutes that must pass before triggering again (0 = disabled)?", defaultValue: 0, range: "0..9999"
+               input "afterTime", "time", title: "Only if time is after...", required: false
+               input "beforeTime", "time", title: "and before...", required: false
+               input "daysOfWeek", "enum", title: "Select Days of the Week", required: false, multiple: true, options: ["Sunday": "Sunday", "Monday": "Monday", "Tuesday": "Tuesday", "Wednesday": "Wednesday", "Thursday": "Thursday", "Friday": "Friday", "Saturday": "Saturday"]
+          }
+          section ("Weather Conditions") {
+                    input "high_is_less_than", "number", required: false, title: "Today's high must be less than", range: "-100..200"
+                    input "high_is_greater_than", "number", required: false, title: "Today's high must be greater than", range: "-100..200"
+                    input "low_is_less_than", "number", required: false, title: "Today's low must be less than", range: "-100..200"
+                    input "low_is_greater_than", "number", required: false, title: "Today's low must be greater than", range: "-100..200"
+                    input "humidity_is_less_than", "number", required: false, title: "Today's average humidity must be less than", range: "-100..200"
+                    input "humidity_is_greater_than", "number", required: false, title: "Today's average humidity must be greater than", range: "-100..200"
+          }
     }
     page(name: "conditionsPage", title: "ComEd Rule Conditions", install: true, uninstall: true)
 
@@ -73,9 +88,9 @@ def initialize() {
     }
 }
 
-//def testCode() {
-//     processPriceChange(5.1, "2018-01-01", 2.0)
-//}
+def testCode() {
+     processPriceChange(5.1, "2018-01-01", 2.0)
+}
 
 // page for allowing the user to give the automation a custom name
 def conditionsPage() {
@@ -86,7 +101,7 @@ def conditionsPage() {
         app.updateLabel(l)
     }
     dynamicPage(name: "conditionsPage", install: true) { //, title: "Rule Actions", install: true, uninstall: true) {
-        section("Rule Options") {
+        section("Additional Price Conditions") {
                //def cents_per_kwh_title = "Cents Per KWH Threshold?"
                if (ruleType.toLowerCase() == "between") {
                     //cents_per_kwh_title = "High Cents/KWH Threshold?"
@@ -94,13 +109,11 @@ def conditionsPage() {
                } else {
                     input "cents_per_kwh_reset", "decimal", required: true, title: "Do not execute again until price falls below this cents/kwh threshold is met (0.0 = disabled)?", defaultValue: 0.0, range: "0..30"
                }
-               //input "cents_per_kwh", "decimal", required: true, title: cents_per_kwh_title, defaultValue: 4.5, range: "0..30", submitOnChange: true
-               input "time_delay", "number", required: true, title: "Select how many minutes to wait before this condition is elgible to trigger again (0 = disabled)?", defaultValue: 0
+          }
+          
+          section("Other Conditions") {     
                input "elgibleModes", "mode", title: "Select elgible modes", multiple: true, required: false
-               input "afterTime", "time", title: "Only if time is after...", required: false
-               input "beforeTime", "time", title: "and before...", required: false
-               input "daysOfWeek", "enum", title: "Select Days of the Week", required: true, multiple: true, options: ["Sunday": "Sunday", "Monday": "Monday", "Tuesday": "Tuesday", "Wednesday": "Wednesday", "Thursday": "Thursday", "Friday": "Friday", "Saturday": "Saturday"]
-        }
+          }
   
         section("Which Actions To Excute?") {
              input "switch_on", "capability.switch", title: "Select the switches to turn on", required: false, multiple:true, hideWhenEmpty: true
@@ -169,6 +182,36 @@ def checkModes() {
      }
 }
 
+// Check High Forcast
+def checkWeatherForecastHigh() {
+     return checkWeatherHelper(high_is_greater_than,high_is_less_than,parent.getTodayForecastHigh())
+}
+
+// Check Low Forcast
+def checkWeatherForecastLow() {
+     return checkWeatherHelper(low_is_greater_than,low_is_less_than,parent.getTodayForecastLow())
+}
+
+// Check Humidity Forcast
+def checkWeatherForecastHumidity() {
+     return checkWeatherHelper(humidity_is_greater_than,humidity_is_less_than,parent.getTodayForecastHumidity())
+}
+
+
+
+def checkWeatherHelper(greaterThanNumber, LessThanNumber, NumberToCompare) {
+     if (greaterThanNumber != null && LessThanNumber == null) {
+          if (NumberToCompare >= greaterThanNumber) { return true } else { return false }
+     } else if (greaterThanNumber == null && LessThanNumber != null) {
+          if (LessThanNumber >= NumberToCompare) { return true } else { return false }
+     } else if (greaterThanNumber != null && LessThanNumber != null) {
+          if (LessThanNumber >= NumberToCompare && NumberToCompare >= greaterThanNumber) { return true } else { return false }
+     } else {
+          // Must return true because all other conditions would assume either a weird error or that both values are null in which case the check should pass
+          return true
+     }
+}
+
 // Perform a time check and return the boolean values.  This allows us to modularize the conditionals making it easier to read and maintain code.
 def checkTime() {
      // To allow maximum flexibility, any values not specified (i.e. afterTime and beforeTime) will be substiuted with midnight to enable simple time
@@ -233,7 +276,7 @@ def resetPricePolicyThresholdAction() {
 def checkTimeCondition(lastChangeDate) {
      def duration = (now() - lastChangeDate)/60000
      log.debug "checkTimeCondition - DATE: ${duration} minutes ago, THRESHOLD: ${time_delay}"
-     if (duration >= time_delay) { return true }
+     if (time_delay == null || duration >= time_delay) { return true }
      else { return false }
 }
 
@@ -254,7 +297,7 @@ def condition_changer() {
 // This is a simple helper to make some of the if statements more readible and predictable.
 def condition_helper(enabled, thresholdStatus) {
      log.debug("Rule enabled: ${enabled}, status: ${thresholdStatus}")
-     if (enabled && checkModes() && checkTime() && checkDayOfWeek() && thresholdStatus == "RESET") { return true }
+     if (enabled && checkModes() && checkTime() && checkDayOfWeek() && checkWeatherForecastHumidity() && checkWeatherForecastLow() && checkWeatherForecastHigh() && thresholdStatus == "RESET") { return true }
      else { return false }
 }
 

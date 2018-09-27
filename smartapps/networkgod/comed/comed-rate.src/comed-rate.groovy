@@ -19,9 +19,12 @@ definition(
 preferences {
     // The parent app preferences are pretty simple: just use the app input for the child app.
     page(name: "mainPage", title: "ComEd Rules", install: true, uninstall: true,submitOnChange: true) {
-        section {
-            app(name: "ComEdChildApp", appName: "ComEd Rate Rule", namespace: "NetworkGod/ComEd", title: "Create New Automation", multiple: true)
-            }
+         section {
+              input "zipCode", "text", required: true, title: "Weather Report Zip Code"
+         }
+         section {
+              app(name: "ComEdChildApp", appName: "ComEd Rate Rule", namespace: "NetworkGod/ComEd", title: "Create New Automation", multiple: true)
+         }
             
     }
     //page(name: "statusPage")
@@ -50,9 +53,18 @@ def updated() {
 
 def initialize() {
 	// TODO: subscribe to attributes, devices, locations, etc.
-    runEvery5Minutes(getData)
-    //runEvery1Minute(getData)
+
+    // Initial values
     state.previousPrice = 0.0
+    
+    // Populate information right away
+    getForcast()
+    getData()
+    
+    
+    // Set schedulers
+    runEvery5Minutes(getData)
+    runEvery15Minutes(getForcast)
 }
 
 // TODO: implement event handlers
@@ -92,4 +104,32 @@ def getData() {
     log.error "something went wrong: $e"
     }
 
+}
+
+// Get Weather
+private get(feature) {
+    getWeatherFeature(feature, zipCode)
+}
+
+private getForcast() {
+     def f = get("forecast")
+     state.forecast = f?.forecast?.simpleforecast?.forecastday[0]
+     log.debug("${state.forecast}")
+     //if (state.forecast) {
+     //     f1?.each {
+     //          log.debug("${it.low.fahrenheit}")
+     //     }
+     //}
+}
+
+public getTodayForecastLow() {
+     return state.forecast?.low?.fahrenheit
+}
+
+public getTodayForecastHigh() {
+     return state.forecast?.high?.fahrenheit
+}
+
+public getTodayForecastHumidity() {
+     return state.forecast.avehumidity
 }
