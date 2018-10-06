@@ -74,9 +74,9 @@ def parse(String description) {
 
 def installed() {
     refresh()
-    runEvery1Minute(ProcessHourlyPricingData)
+    runEvery5Minutes(ProcessHourlyPricingData)
     runEvery15Minutes(Last30MinuteHandler, [mins: 30])
-    runEvery15Minutes(Last60MinuteHandler, [mins: 60])
+    runEvery30Minutes(Last60MinuteHandler, [mins: 60])
 }
 
 // handle commands
